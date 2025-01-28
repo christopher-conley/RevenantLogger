@@ -1,0 +1,99 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0;netstandard2.0</TargetFrameworks>
+    <LangVersion>13.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>RosettaTools.Pwsh.Text.RevenantLogger</RootNamespace>
+    <IsPackable>true</IsPackable>
+    <WarningsAsErrors>False</WarningsAsErrors>
+    <GenerateDocumentationFile>False</GenerateDocumentationFile>
+    <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <AssemblyName>RosettaTools.Pwsh.Text.RevenantLogger</AssemblyName>
+    <AssemblyTitle>Revenant Logger</AssemblyTitle>
+    <AssemblyVersion>$([System.IO.File]::ReadAllText("VERSION").Trim())</AssemblyVersion>
+    <Version>$(AssemblyVersion)</Version>
+    <InformationalVersion>$(AssemblyVersion)</InformationalVersion>
+    <ProductVersion>$(AssemblyVersion)</ProductVersion>
+    <FileVersion>$(AssemblyVersion)</FileVersion>
+    <Authors>Christohper Conley</Authors>
+    <Company>Rosetta Stoned Software</Company>
+    <Description>Colorful logging for PowerShell that doesn't suck. Much.</Description>
+    <Copyright>Copyright (c) 2024-2025 Christopher Conley</Copyright>
+    <Product>Revenant Logger</Product>
+    <ProductName>Revenant Logger</ProductName>
+    <Title>Revenant Logger</Title>
+    <PackageProjectUrl>https://github.com/christopher-conley/RevenantLogger</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/christopher-conley/RevenantLogger</RepositoryUrl>
+    <PackageTags>powershell;pwsh;powershell-module;pwsh-module;log;logs;logging;color;text;ansi;console;utility</PackageTags>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <ProjectGuid>77DCA780-DEAD-451B-BEEF-A7716181EBB3</ProjectGuid>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\figlet-fonts\*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="PolySharp" Version="1.15.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0' Or '$(TargetFramework)' == 'net9.0'">
+    <PackageReference Include="System.Management.Automation" Version="7.4.6" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="8.0.12" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.1" />
+    <PackageReference Include="vertical-spectreconsolelogger" Version="0.10.1-dev.20241201.35" />
+    <PackageReference Include="Spectre.Console.Cli" Version="0.49.2-preview.0.68" />
+    <PackageReference Include="Spectre.Console.Json" Version="0.49.2-preview.0.68" />
+
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.3" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" />
+    <PackageReference Include="PowerShellStandard.Library" Version="5.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="3.0.0" />
+    <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="3.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="3.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="3.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="3.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.0.0" />
+    <PackageReference Include="vertical-spectreconsolelogger" Version="0.10.1-dev.20241117.32" />
+    <PackageReference Include="Spectre.Console.Cli" Version="0.46.1-preview.0.20" />
+    <PackageReference Include="Spectre.Console.Json" Version="0.46.1-preview.0.20" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="RosettaTools.Pwsh.Text.RevenantLogger.Common" />
+    <Using Include="RosettaTools.Pwsh.Text.RevenantLogger.Helpers" />
+    <Using Include="RosettaTools.Pwsh.Text.RevenantLogger.Interfaces" />
+    <Using Include="System.Management.Automation" />
+    <Using Include="Vertical.SpectreLogger" />
+    <Using Include="Vertical.SpectreLogger.Options" />
+  </ItemGroup>
+
+  <Target Name="UpdateVersion" BeforeTargets="DispatchToInnerBuilds">
+    <Exec Command="pwsh -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;..\scripts\setversion.ps1&quot; -AssemblyVersion" Condition="$([MSBuild]::IsOSUnixLike())" />
+    <Exec Command="C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;..\scripts\setversion.ps1&quot; -AssemblyVersion" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
+  </Target>
+
+</Project>
