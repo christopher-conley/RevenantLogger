@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
-using RosettaTools.Pwsh.Text.RevenantLogger.Common.ExtensionMethods;
 using static RosettaTools.Pwsh.Text.RevenantLogger.Common.StaticStrings;
 
 namespace RosettaTools.Pwsh.Text.RevenantLogger.Common

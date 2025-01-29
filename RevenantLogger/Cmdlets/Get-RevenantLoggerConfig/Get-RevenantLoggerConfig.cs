@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Spectre.Console;
 using Spectre.Console.Json;
-using RosettaTools.Pwsh.Text.RevenantLogger.Common.ExtensionMethods;
 
 namespace RosettaTools.Pwsh.Text.RevenantLogger.Cmdlets
 {

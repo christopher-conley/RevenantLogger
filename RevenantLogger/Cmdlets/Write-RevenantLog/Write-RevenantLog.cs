@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using RosettaTools.Pwsh.Text.RevenantLogger.Common.ExtensionMethods;
 using Spectre.Console;
 using System.Reflection;
 using System.Collections;

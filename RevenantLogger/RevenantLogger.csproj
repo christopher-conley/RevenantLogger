@@ -86,6 +86,7 @@
     <Using Include="RosettaTools.Pwsh.Text.RevenantLogger.Common" />
     <Using Include="RosettaTools.Pwsh.Text.RevenantLogger.Helpers" />
     <Using Include="RosettaTools.Pwsh.Text.RevenantLogger.Interfaces" />
+    <Using Include="RosettaTools.Pwsh.Text.RevenantLogger.Common.ExtensionMethods" />
     <Using Include="System.Management.Automation" />
     <Using Include="Vertical.SpectreLogger" />
     <Using Include="Vertical.SpectreLogger.Options" />

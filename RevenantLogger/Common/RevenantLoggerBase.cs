@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Runtime.CompilerServices;
-using RosettaTools.Pwsh.Text.RevenantLogger.Common.ExtensionMethods;
 using Spectre.Console;
 using System.Dynamic;
 
