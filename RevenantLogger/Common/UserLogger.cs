@@ -44,7 +44,14 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Common
         {
             try
             {
-                _guid = Guid.Parse(guid);
+                if (null != guid)
+                {
+                    _guid = Guid.Parse(guid);
+                }
+                else
+                {
+                    _guid = Guid.NewGuid();
+                }
             }
             catch
             {
@@ -58,6 +65,7 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Common
             _rawLoggerObject = logger;
         }
     }
+
     public class UserCustomLogger : RevenantLoggerPSCmdlet, ILogger
     {
         private ILogger _logger;
@@ -86,6 +94,109 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Common
             _logger = _pseudoLogger = logger;
             _config = config;
 
+        }
+
+#region ILogger wrapper methods
+        public void LogDebug(string message)
+        {
+            object[] args = [];
+            Log(message: message, logLevel: LogLevel.Debug, caller: null, args: args);
+        }
+
+        public void LogDebug(string message, string? caller = null)
+        {
+            object[] args = [];
+            Log(message: message, logLevel: LogLevel.Debug, caller: caller, args: args);
+        }
+
+        public void LogDebug(string message, string? caller = null, params object?[] args)
+        {
+            Log(message: message, logLevel: LogLevel.Debug, caller: caller, args: args);
+        }
+
+        public void LogTrace(string message)
+        {
+            object[] args = [];
+            Log(message: message, logLevel: LogLevel.Trace, caller: null, args: args);
+        }
+
+        public void LogTrace(string message, string? caller = null)
+        {
+            object[] args = [];
+            Log(message: message, logLevel: LogLevel.Trace, caller: caller, args: args);
+        }
+
+        public void LogTrace(string message, string? caller = null, params object?[] args)
+        {
+            Log(message: message, logLevel: LogLevel.Trace, caller: caller, args: args);
+        }
+
+        public void LogInformation(string message)
+        {
+            object[] args = [];
+            Log(message: message, logLevel: LogLevel.Information, caller: null, args: args);
+        }
+
+        public void LogInformation(string message, string? caller = null)
+        {
+            object[] args = [];
+            Log(message: message, logLevel: LogLevel.Information, caller: caller, args: args);
+        }
+
+        public void LogInformation(string message, string? caller = null, params object?[] args)
+        {
+            Log(message: message, logLevel: LogLevel.Information, caller: caller, args: args);
+        }
+
+        public void LogWarning(string message)
+        {
+            object[] args = [];
+            Log(message: message, logLevel: LogLevel.Warning, caller: null, args: args);
+        }
+
+        public void LogWarning(string message, string? caller = null)
+        {
+            object[] args = [];
+            Log(message: message, logLevel: LogLevel.Warning, caller: caller, args: args);
+        }
+
+        public void LogWarning(string message, string? caller = null, params object?[] args)
+        {
+            Log(message: message, logLevel: LogLevel.Warning, caller: caller, args: args);
+        }
+
+        public void LogError(string message)
+        {
+            object[] args = [];
+            Log(message: message, logLevel: LogLevel.Error, caller: null, args: args);
+        }
+
+        public void LogError(string message, string? caller = null)
+        {
+            object[] args = [];
+            Log(message: message, logLevel: LogLevel.Error, caller: caller, args: args);
+        }
+
+        public void LogError(string message, string? caller = null, params object?[] args)
+        {
+            Log(message: message, logLevel: LogLevel.Error, caller: caller, args: args);
+        }
+
+        public void LogCritical(string message)
+        {
+            object[] args = [];
+            Log(message: message, logLevel: LogLevel.Critical, caller: null, args: args);
+        }
+
+        public void LogCritical(string message, string? caller = null)
+        {
+            object[] args = [];
+            Log(message: message, logLevel: LogLevel.Critical, caller: caller, args: args);
+        }
+
+        public void LogCritical(string message, string? caller = null, params object?[] args)
+        {
+            Log(message: message, logLevel: LogLevel.Critical, caller: caller, args: args);
         }
 
         public void Log(string message)
@@ -170,6 +281,7 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Common
                     break;
             }
         }
+#endregion
 
         public IDisposable? BeginScope<TState>(TState state) where TState : notnull
         {
