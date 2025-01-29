@@ -35,26 +35,12 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Common
             _config = config ?? _logger.Config;
             _rawLoggerObject = logger;
         }
-        public UserLogger(string name, ILogger logger)
-        {
-            _name = name;
-            _guid = Guid.NewGuid();
-            _creationTime = DateTime.Now;
-            _logger = new UserCustomLogger(logger);
-            _config = _logger.Config;
-            _rawLoggerObject = logger;
-        }
-        public UserLogger(string name, DateTime creationTime, ILogger logger)
-        {
-            _name = name;
-            _guid = Guid.NewGuid();
-            _creationTime = creationTime;
-            _logger = new UserCustomLogger(logger);
-            _config = _logger.Config;
-            _rawLoggerObject = logger;
-        }
 
-        public UserLogger(string name, string guid, DateTime creationTime, ILogger logger)
+        public UserLogger(string name,
+            ILogger logger,
+            string? guid = null,
+            DateTime? creationTime = null,
+            IRevenantConfiguration? config = null)
         {
             try
             {
@@ -66,62 +52,11 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Common
                 Debug.WriteLine($"The GUID provided ({guid}) is not a valid GUID. A new GUID was generated: {_guid}");
             }
             _name = name;
-            _creationTime = creationTime;
+            _creationTime = creationTime ?? DateTime.Now;
             _logger = new UserCustomLogger(logger);
-            _config = _logger.Config;
+            _config = config ?? _logger.Config;
             _rawLoggerObject = logger;
         }
-        public UserLogger(string name, Guid guid, DateTime creationTime, ILogger logger)
-        {
-            _name = name;
-            _guid = guid;
-            _creationTime = creationTime;
-            _logger = new UserCustomLogger(logger);
-            _config = _logger.Config;
-            _rawLoggerObject = logger;
-        }
-
-        public UserLogger(
-            string name,
-            Guid guid,
-            DateTime creationTime,
-            IRevenantConfiguration config,
-            ILogger logger,
-            UserCustomLogger fullLoggerObject)
-        {
-            _name = name;
-            _guid = guid;
-            _creationTime = creationTime;
-            _config = config;
-            _logger = fullLoggerObject;
-            _rawLoggerObject = logger;
-        }
-
-        public UserLogger(
-            string name,
-            string guid,
-            DateTime creationTime,
-            IRevenantConfiguration config,
-            ILogger logger,
-            UserCustomLogger fullLoggerObject)
-        {
-            try
-            {
-                _guid = Guid.Parse(guid);
-            }
-            catch
-            {
-                _guid = Guid.NewGuid();
-                Debug.WriteLine($"The GUID provided ({guid}) is not a valid GUID. A new GUID was generated: {_guid}");
-            }
-            _name = name;
-            _creationTime = creationTime;
-            _config = config;
-            _logger = fullLoggerObject;
-            _rawLoggerObject = logger;
-        }
-
-
     }
     public class UserCustomLogger : RevenantLoggerPSCmdlet, ILogger
     {
