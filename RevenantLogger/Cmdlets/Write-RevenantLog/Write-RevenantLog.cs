@@ -9,11 +9,11 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Cmdlets
     [Cmdlet(VerbsCommunications.Write, "RevenantLog")]
     [Alias("Write-RevenantLogger", "Write-RevenantLogMessage", "Write-RevenantLoggerMessage")]
     [OutputType(typeof(void))]
-    //[OutputType(typeof(CmdWriteRevenantLog))]
     public class CmdWriteRevenantLog : RevenantLoggerPSCmdlet
     {
         private string? _userLogLevel;
         private string? _userCaller;
+        private string[]? _userPlaceholders;
 
         [Parameter(Mandatory = false)]
         [Alias("Configuration", "ConfigFile")]
@@ -69,6 +69,18 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Cmdlets
             set => _userCaller = value;
         }
 
+        [Parameter(Mandatory = false, ValueFromPipelineByPropertyName = true)]
+        [Alias("Replacements")]
+        [AllowNull()]
+        public string[] Placeholders
+        {
+            get {
+                _userPlaceholders ??= [];
+                return _userPlaceholders;
+            }
+            set => _userPlaceholders = value;
+        }
+
         public new ILogger? CmdletLogger { get => _cmdletLogger; }
 
         public Dictionary<string, ILogger?>? BuiltLoggers
@@ -104,7 +116,7 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Cmdlets
 
             if (inputBaseType == typeof(string))
             {
-                LogMessage(Severity, Message.ToString(), Caller?.ToString());
+                LogMessage(Severity, Message.ToString(), Caller?.ToString(), args: Placeholders);
             }
             else if (inputBaseType == typeof(object[]) || inputBaseType == typeof(System.Object[]))
             {
@@ -122,7 +134,7 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Cmdlets
                 try
                 {
                     CmdletLogger?.RLogDebug($"Message type is {StringExtensions.EscapeMarkup(inputBaseType.ToString())}");
-                    LogMessage(Severity, StringExtensions.EscapeMarkup(Message.ToString()), Caller?.ToString());
+                    LogMessage(Severity, StringExtensions.EscapeMarkup(Message.ToString()), Caller?.ToString(), args: Placeholders);
                 }
                 catch (Exception ex)
                 {
@@ -161,7 +173,7 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Cmdlets
                 {
                     foreach (string? item in FlattenedArray)
                     {
-                        LogMessage(logLevel, StringExtensions.EscapeMarkup(item), caller);
+                        LogMessage(logLevel, StringExtensions.EscapeMarkup(item), caller, args: Placeholders);
                     }
                 }
             }
@@ -172,7 +184,7 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Cmdlets
 
             if (null != inputHash)
             {
-                LogMessage(logLevel, $"Object: {StringExtensions.EscapeMarkup(inputType.ToString())}", caller);
+                LogMessage(logLevel, $"Object: {StringExtensions.EscapeMarkup(inputType.ToString())}", caller, args: Placeholders);
                 foreach (DictionaryEntry? item in inputHash)
                 {
                     string itemKey = StringExtensions.EscapeMarkup(item?.Key?.ToString());
