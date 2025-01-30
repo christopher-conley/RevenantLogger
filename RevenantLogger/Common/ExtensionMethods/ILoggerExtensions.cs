@@ -33,7 +33,7 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Common.ExtensionMethods
         /// <br>variables that will be interpolated and substituted for placeholders in the <c>message</c> string being logged.</br></param>
         public static void RLogDebug(this ILogger logger, string? message, string? caller = null, params object?[] args)
         {
-            if (String.IsNullOrWhiteSpace(caller) == false)
+            if (caller.IsNotNullOrWhiteSpace())
             {
                 message = $"[darkgoldenrod]{caller}[/][fuchsia]()[/]: {message}";
             }
@@ -50,7 +50,7 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Common.ExtensionMethods
         /// <br>variables that will be interpolated and substituted for placeholders in the <c>message</c> string being logged.</br></param>
         public static void RLogTrace(this ILogger logger, string? message, string? caller = null, params object?[] args)
         {
-            if (String.IsNullOrWhiteSpace(caller) == false)
+            if (caller.IsNotNullOrWhiteSpace())
             {
                 message = $"[darkgoldenrod]{caller}[/][fuchsia]()[/]: {message}";
             }
@@ -67,7 +67,7 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Common.ExtensionMethods
         /// <br>variables that will be interpolated and substituted for placeholders in the <c>message</c> string being logged.</br></param>
         public static void RLogInformation(this ILogger logger, string? message, string? caller = null, params object?[] args)
         {
-            if (String.IsNullOrWhiteSpace(caller) == false)
+            if (caller.IsNotNullOrWhiteSpace())
             {
                 message = $"[darkgoldenrod]{caller}[/][fuchsia]()[/]: {message}";
             }
@@ -84,7 +84,7 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Common.ExtensionMethods
         /// <br>variables that will be interpolated and substituted for placeholders in the <c>message</c> string being logged.</br></param>
         public static void RLogWarning(this ILogger logger, string? message, string? caller = null, params object?[] args)
         {
-            if (String.IsNullOrWhiteSpace(caller) == false)
+            if (caller.IsNotNullOrWhiteSpace())
             {
                 message = $"[darkgoldenrod]{caller}[/][fuchsia]()[/]: {message}";
             }
@@ -101,7 +101,7 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Common.ExtensionMethods
         /// <br>variables that will be interpolated and substituted for placeholders in the <c>message</c> string being logged.</br></param>
         public static void RLogError(this ILogger logger, string? message, string? caller = null, params object?[] args)
         {
-            if (String.IsNullOrWhiteSpace(caller) == false)
+            if (caller.IsNotNullOrWhiteSpace())
             {
                 message = $"[darkgoldenrod]{caller}[/][fuchsia]()[/]: {message}";
             }
@@ -118,7 +118,7 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Common.ExtensionMethods
         /// <br>variables that will be interpolated and substituted for placeholders in the <c>message</c> string being logged.</br></param>
         public static void RLogCritical(this ILogger logger, string? message, string? caller = null, params object?[] args)
         {
-            if (String.IsNullOrWhiteSpace(caller) == false)
+            if (caller.IsNotNullOrWhiteSpace())
             {
                 message = $"[darkgoldenrod]{caller}[/][fuchsia]()[/]: {message}";
             }
@@ -136,7 +136,7 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Common.ExtensionMethods
         /// <br>variables that will be interpolated and substituted for placeholders in the <c>message</c> string being logged.</br></param>
         public static void RLog(this ILogger logger, LogLevel logLevel, string? message, string? caller = null, params object?[] args)
         {
-            if (String.IsNullOrWhiteSpace(caller) == false)
+            if (caller.IsNotNullOrWhiteSpace())
             {
                 message = $"[darkgoldenrod]{caller}[/][fuchsia]()[/]: {message}";
             }
