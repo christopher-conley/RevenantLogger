@@ -152,8 +152,8 @@
 
 ## UserLogger.cs
 
-- [ ] Add the missing `.Log()` convenience methods like `.LogInformation()` etc. so a loglevel doesn't have to be
-      specified with each manual call a user might make with a raw logger object
+~~- [x] Add the missing `.Log()` convenience methods like `.LogInformation()` etc. so a loglevel doesn't have to be
+      specified with each manual call a user might make with a raw logger object~~
 
 ## Logging.cs
 
