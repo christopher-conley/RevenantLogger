@@ -22,6 +22,8 @@
 
         string DefaultConfigFile { get; }
 
+        string RunningConfigFile { get; }
+
         /// <summary>
         /// Evaluates to "true" if the host operating system is Linux.
         /// </summary>
@@ -31,6 +33,8 @@
         /// Evaluates to "true" if the host operating system is Windows.
         /// </summary>
         bool IsWindows { get; }
+
+        bool IsCustomConfig { get; }
 
         /// <summary>
         /// Gets or sets the path where logfiles are stored.

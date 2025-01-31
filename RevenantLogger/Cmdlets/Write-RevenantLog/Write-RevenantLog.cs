@@ -2,11 +2,12 @@
 using Spectre.Console;
 using System.Reflection;
 using System.Collections;
+using RosettaTools.Pwsh.Text.RevenantLogger.Common.ExtensionMethods;
 
 namespace RosettaTools.Pwsh.Text.RevenantLogger.Cmdlets
 {
 
-    [Cmdlet(VerbsCommunications.Write, "RevenantLog")]
+    [Cmdlet(VerbsCommunications.Write, "RevenantLog", DefaultParameterSetName = "default")]
     [Alias("Write-RevenantLogger", "Write-RevenantLogMessage", "Write-RevenantLoggerMessage")]
     [OutputType(typeof(void))]
     public class CmdWriteRevenantLog : RevenantLoggerPSCmdlet
@@ -16,6 +17,7 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Cmdlets
         private string[]? _userPlaceholders;
 
         [Parameter(Mandatory = false)]
+        [Parameter(Mandatory = true, ParameterSetName = "CustomConfigFile")]
         [Alias("Configuration", "ConfigFile")]
 #if NET8_0_OR_GREATER
         [ValidateNotNullOrWhiteSpace()]
@@ -61,7 +63,7 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Cmdlets
         [Parameter(Mandatory = false, ValueFromPipelineByPropertyName = true)]
         [Alias("Scope", "Category")]
         [AllowNull()]
-        //[ValidateTypes(typeof(string))]
+        [ValidateTypes(typeof(string))]
 
         public string? Caller
         {
@@ -72,6 +74,7 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Cmdlets
         [Parameter(Mandatory = false, ValueFromPipelineByPropertyName = true)]
         [Alias("Replacements")]
         [AllowNull()]
+        [ValidateTypes(typeof(string[]))]
         public string[] Placeholders
         {
             get {
@@ -99,6 +102,11 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Cmdlets
             base.init();
             string methodName = MethodBase.GetCurrentMethod().Name;
 
+            if (ParameterSetName.Equals("CustomConfigFile"))
+            {
+                ValidateOrThrowConfigParam(Config);
+            }
+            
             InitDIContainer<CmdWriteRevenantLog>();
         }
 
@@ -262,5 +270,6 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Cmdlets
                     break;
             }
         }
+
     }
 }

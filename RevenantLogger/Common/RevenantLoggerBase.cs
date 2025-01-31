@@ -16,6 +16,8 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger
         private static List<IDictionary<string, object>> _userCustomLoggers = [];
         private protected static ILoggerFactory _sharedLoggerFactory;
         private protected ILogger? _cmdletLogger;
+        internal protected static string? _customConfig;
+        internal protected static bool _buildFromCustomConfig = false;
         internal protected static IRevenantConfiguration _config;
 
         public static Dictionary<string, Guid> UserLoggersNG
@@ -105,6 +107,9 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger
             get; set;
         }
 
+        public static bool BuildFromCustomConfig { get => _buildFromCustomConfig; }
+        public static string? CustomConfig { get => _customConfig; }
+
         public static Dictionary<LogLevel, string> LogLevelColors
         {
             get
@@ -134,15 +139,26 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger
 
         protected internal void InitDIContainer<TCmdlet>([CallerMemberName] string? caller = null) where TCmdlet : class
         {
-            if (null == CmdletDIContainer)
+            WriteVerbose("Inside InitDIContainer");
+            if (null == CmdletDIContainer && null == GenericHost)
             {
                 if (null == this.SessionState)
                 {
-                    CmdletDIContainer = new DIContainer(sessionState: new SessionState());
+                    //CmdletDIContainer = new DIContainer(sessionState: new SessionState());
+
+                    //CmdletDIContainer = new DIContainer();
+                    //CmdletDIContainer.PSWriteMessage += WritePSMessage;
+
+                    CmdletDIContainer = new DIContainer(WritePSMessage);
+                    CmdletDIContainer.BuildDIContainer();
                 }
                 else
                 {
-                    CmdletDIContainer = new DIContainer(sessionState: this.SessionState);
+                    //CmdletDIContainer = new DIContainer(sessionState: this.SessionState);
+                    //CmdletDIContainer = new DIContainer();
+
+                    CmdletDIContainer = new DIContainer(WritePSMessage);
+                    CmdletDIContainer.BuildDIContainer();
                 }
             }
 
@@ -336,6 +352,71 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger
                 }
             }
             return null;
+        }
+
+        protected internal void ValidateOrThrowConfigParam(PSObject? configParam)
+        {
+            if (null == configParam || null == configParam.BaseObject)
+            {
+                var terminatingError = Utilities.NewPSError("Config", "Parameter -Config is null", "ConfigIsNull", ErrorCategory.InvalidArgument, configParam);
+                WriteError(terminatingError);
+                throw terminatingError.Exception;
+            }
+            else
+            {
+                Type? configBaseType = configParam.BaseObject.GetType();
+
+                switch (configBaseType)
+                {
+                    case Type _ when configBaseType == typeof(string):
+                        _buildFromCustomConfig = true;
+                        _customConfig = configParam.BaseObject.ToString();
+                        break;
+
+                    case Type _ when configBaseType == typeof(FileInfo):
+                        _buildFromCustomConfig = true;
+                        _customConfig = ((FileInfo)configParam.BaseObject).FullName.ToString();
+                        break;
+
+                    default:
+                        var terminatingError = Utilities.NewPSError("Config", "The type of value provided to -Config is invalid, please provide a string or FileInfo object.", "ConfigIsInvalid", ErrorCategory.InvalidArgument, configParam);
+                        WriteError(terminatingError);
+                        throw terminatingError.Exception;
+                }
+            }
+
+            return;
+        }
+
+        internal void WritePSMessage(object? sender, PSWriteEventArgs e)
+        {
+            switch (e.WriteMethod)
+            {
+                case "WriteVerbose":
+                    WriteVerbose(e.WriteMessage);
+                    break;
+                case "WriteDebug":
+                    WriteDebug(e.WriteMessage);
+                    break;
+                case "WriteWarning":
+                    WriteWarning(e.WriteMessage);
+                    break;
+                case "WriteError":
+                    WriteError(e.ErrorRecord);
+                    break;
+                //case "WriteInformation":
+                //    WriteInformation(e.WriteMessage);
+                //    break;
+                //case "WriteProgress":
+                //    WriteProgress(e.WriteMessage);
+                //    break;
+                case "WriteObject":
+                    WriteObject(e.WriteMessage);
+                    break;
+                default:
+                    WriteVerbose(e.WriteMessage);
+                    break;
+            }
         }
 
         //private protected void SetMarkupOperators() {

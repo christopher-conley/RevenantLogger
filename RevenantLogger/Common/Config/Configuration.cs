@@ -18,7 +18,11 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Helpers
         private ConfigDefinition.ConfigRoot _runningConfig;
         private bool _isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         private bool _isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+        private string? _customConfig;
+        private string _runningConfigFile;
+        private bool _isCustomConfigFile = false;
         private string _os;
+        public EventHandler<PSWriteEventArgs>? PSWriteMessage;
 
         public DateTime CreationTime { get => _creationTime; }
 
@@ -118,6 +122,12 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Helpers
             private set => _defaultConfigFile = value;
         }
 
+        public string RunningConfigFile
+        {
+            get => _runningConfigFile;
+            private set => _runningConfigFile = value;
+        }
+
         public bool FileLoggingEnabled
         {
             get => _runningConfig.Logging.Enabled;
@@ -141,6 +151,12 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Helpers
             private set => _isLinux = value;
         }
 
+        public bool IsCustomConfig
+        {
+            get => _isCustomConfigFile;
+            private set => _isCustomConfigFile = value;
+        }
+
         public string OS
         {
             get => _os;
@@ -152,27 +168,62 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Helpers
             get => _logger;
         }
 
-        public Configuration(ILogger<Configuration> logger)
+        public Configuration(ILogger<Configuration> logger, EventHandler<PSWriteEventArgs>? writeHandler = null)
         {
             _logger = logger;
+            PSWriteMessage = writeHandler;
             Init();
         }
+
         public Configuration()
         {
             Init();
         }
 
+        public Configuration(string customConfig)
+        {
+            _customConfig = customConfig;
+            _isCustomConfigFile = true;
+            Init();
+        }
+
+        public Configuration(EventHandler<PSWriteEventArgs>? writeHandler = null)
+        {
+            PSWriteMessage = writeHandler;
+            Init();
+        }
+
+        public Configuration(ILogger<Configuration> logger, string customConfig, EventHandler<PSWriteEventArgs>? writeHandler = null)
+        {
+            PSWriteMessage = writeHandler;
+            _logger = logger;
+            _customConfig = customConfig;
+            _isCustomConfigFile = true;
+            Init();
+        }
+
+        public Configuration(string customConfig, EventHandler<PSWriteEventArgs>? writeHandler = null)
+        {
+            PSWriteMessage = writeHandler;
+            _customConfig = customConfig;
+            _isCustomConfigFile = true;
+            Init();
+        }
+
         private void Init()
         {
+            PSWrappers.WriteVerbose(this, PSWriteMessage, "Initializing configuration");
             _defaultConfig = GetDefaultConfig();
             _runningConfig ??= GetDefaultConfig();
 
             _os = _isWindows ? "Windows" : _isLinux ? "Linux" : "Unknown";
 
             // per-directory logging settings support if dotfile of config filename exists
-            if (File.Exists($".{_defaultConfigFilename}"))
+            if (File.Exists($".{_defaultConfigFilename}") && !_isCustomConfigFile)
             {
+                PSWrappers.WriteVerbose(this, PSWriteMessage, "Using config file found in the current directory");
                 _configHome = Directory.GetCurrentDirectory();
+                _runningConfigFile = Path.Combine(_configHome, _defaultConfigFilename);
             }
             else
             {
@@ -187,12 +238,14 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Helpers
                 ]);
             }
             _defaultConfigFile = Path.Combine(_configHome, _defaultConfigFilename);
+            _runningConfigFile = _defaultConfigFile;
 #pragma warning disable CA1416 // Validate platform compatibility
 
             // Yeah, this looks dumb, but it's a whole hell of a lot easier to read
             // in this context than just slapping a negation operator at the front
             if (Directory.Exists(_configHome) == false)
             {
+                PSWrappers.WriteVerbose(this, PSWriteMessage, $"Default config directory {_configHome} does not exist, creating it");
                 if (_isLinux)
                 {
 #if NET8_0_OR_GREATER
@@ -225,6 +278,11 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Helpers
                 catch (Exception)
                 {
                     _runningConfig.Logging.DateFormat = "yyyy-MM-dd";
+                    PSWrappers.WriteWarning(
+                        this,
+                        PSWriteMessage,
+                        $"The date format \"{_runningConfig.Logging.DateFormat}\" provided in the config file is an invalid date format, using default value instead"
+                        );
                 }
             }
 
@@ -241,6 +299,11 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Helpers
                 catch (Exception)
                 {
                     _runningConfig.Logging.TimeFormat = "HH:mm:ss.fffK";
+                    PSWrappers.WriteWarning(
+                        this,
+                        PSWriteMessage,
+                        $"The time format \"{_runningConfig.Logging.TimeFormat}\" provided in the config file is an invalid time format, using default value instead"
+                        );
                 }
             }
 
@@ -265,17 +328,56 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Helpers
         {
             if (File.Exists(_defaultConfigFile) == false)
             {
+                PSWrappers.WriteVerbose(this, PSWriteMessage, "Default configuration file does not exist, creating it");
                 SaveConfig();
             }
 
+            string configToLoad = String.Empty;
+
+            if (IsCustomConfig)
+            {
+                PSWrappers.WriteVerbose(this, PSWriteMessage, $"Using custom configuration file at: {_customConfig}");
+                if (String.IsNullOrWhiteSpace(_customConfig))
+                {
+                    PSWrappers.WriteError(
+                        this,
+                        PSWriteMessage,
+                        "Config", "Parameter -Config is null", "ConfigIsNull", ErrorCategory.InvalidArgument, this
+                        );
+                    throw new ArgumentNullException(nameof(_customConfig), "Custom configuration file path is null or empty");
+                }
+
+                if (File.Exists(_customConfig) == false)
+                {
+                    PSWrappers.WriteError(
+                        this,
+                        PSWriteMessage,
+                        "Config", $"Config file {_customConfig} is inaccessible or does not exist.", "ConfigUnreadable", ErrorCategory.ObjectNotFound, this
+                        );
+                    throw new FileNotFoundException("Custom configuration file does not exist", _customConfig);
+                }
+
+                configToLoad = _customConfig;
+            }
+            else
+            {
+                configToLoad = _defaultConfigFile;
+            }
+
+            PSWrappers.WriteVerbose(this, PSWriteMessage, $"Loading configuration file from disk at path: {configToLoad}");
             try
             {
-                string json = File.ReadAllText(_defaultConfigFile);
+                string json = File.ReadAllText(configToLoad);
                 _runningConfig = JsonConvert.DeserializeObject<ConfigDefinition.ConfigRoot>(json) ?? GetDefaultConfig();
+                _runningConfigFile = configToLoad ?? _defaultConfigFile;
             }
             catch (Exception ex)
             {
-                Logger?.LogCritical("Failed to load configuration file from disk: {ex.Message}", ex.Message);
+                PSWrappers.WriteError(
+                    this,
+                    PSWriteMessage,
+                    "Config", $"Failed to load configuration file from disk at path {configToLoad}: {ex.Message}", "ConfigUnreadable", ErrorCategory.ReadError, this
+                    );
                 throw;
             }
         }
@@ -297,6 +399,7 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Helpers
 
         public void SaveConfig(ConfigDefinition.ConfigRoot _incomingConfig, string _savePath)
         {
+            PSWrappers.WriteVerbose(this, PSWriteMessage, $"Writing configuration file to disk at path: {_savePath}");
             string json = JsonConvert.SerializeObject(_incomingConfig, Formatting.Indented);
             try
             {
@@ -304,7 +407,11 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Helpers
             }
             catch (Exception ex)
             {
-                Logger?.LogCritical("Failed to write configuration file to disk: {ex.Message}", ex.Message);
+                PSWrappers.WriteError(
+                    this,
+                    PSWriteMessage,
+                    "Config", $"Failed to write configuration file to disk: {ex.Message}", "ConfigWriteError", ErrorCategory.WriteError, this
+                    );
                 throw;
             }
         }

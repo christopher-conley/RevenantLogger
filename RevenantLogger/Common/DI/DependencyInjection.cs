@@ -10,13 +10,15 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Common
     {
         private DateTime _creationTime;
         private IServiceCollection? _services;
-        private IServiceProvider _diServiceProvider;
+        private IServiceProvider? _diServiceProvider;
         private IHostBuilder? _genericHostBuilder;
         private ILoggingBuilder? _loggingBuilder;
         private IHost? _genericHost;
         private ILogger<DIContainer>? _logger;
         //private IRevenantConfiguration? _config;
         private PSVariable _existingDIContainerVariable = new(_PSVariableDIContainer, null, ScopedItemOptions.AllScope | ScopedItemOptions.None);
+        public EventHandler<PSWriteEventArgs> PSWriteMessage;
+        private PSWriteEventArgs writeObject = new();
 
         public DateTime CreationTime { get => _creationTime; }
         protected internal IHostBuilder? GenericHostBuilder
@@ -77,37 +79,28 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Common
         }
 
 
-        public DIContainer(SessionState sessionState)
+        //public DIContainer(SessionState sessionState)
+        public DIContainer()
         {
-            if (CmdletDIContainer != null)
+
+        }
+
+        // Necessary since we can't call the WriteVerbose/WriteInformation/Write* PS methods
+        // directly unless we're in the PSCmdlet/running within the same thread. This allows
+        // for the event handler running in the same thread to call the Write* methods.
+        public DIContainer(EventHandler<PSWriteEventArgs> writeHandler)
+        {
+            PSWriteMessage += writeHandler;
+        }
+
+        public void BuildDIContainer()
+        {
+            if (!_buildFromCustomConfig && _genericHost != null)
             {
+                writeObject.WriteMessage = "DIContainer already exists, and this is not a custom config. Returning.";
+                PSWriteMessage(this, writeObject);
                 return;
             }
-
-            //_existingDIContainerVariable = new(_PSVariableDIContainer, null, ScopedItemOptions.AllScope | ScopedItemOptions.None);
-            //CmdletDIContainer = GetExistingPSVariable<DIContainer>(SessionState: sessionState, psVariable: _PSVariableDIContainer);
-
-            //if (null != CmdletDIContainer)
-            //{
-            //    _creationTime = CmdletDIContainer.CreationTime;
-            //    _genericHost = GenericHost = CmdletDIContainer.DGenericHost;
-            //    _genericHost?.RunAsync();
-
-            //    _config = CmdletDIContainer.Config;
-
-            //    // in case the config changed between the last time a Cmdlet was ran and now
-            //    _config?.LoadConfig();
-
-            //    _logger = CmdletDIContainer.Logger;
-            //    _genericHostBuilder = CmdletDIContainer.GenericHostBuilder;
-            //    _services = CmdletDIContainer.Services;
-            //    _diServiceProvider = DIServiceProvider = CmdletDIContainer.DDIServiceProvider;
-            //    _sharedLoggerFactory = SharedLoggerFactory = CmdletDIContainer.DSharedLoggerFactory;
-            //    return;
-            //}
-
-            //_services = NewServiceCollection();
-            //_diServiceProvider = _services.BuildServiceProvider();
 
             _genericHostBuilder = BuildAppHost();
             _genericHost = GenericHost = _genericHostBuilder.Build();
@@ -127,7 +120,8 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Common
             _logger ??= SharedLoggerFactory?.CreateLogger<DIContainer>();
             AddToLoggersList<DIContainer>(_logger);
 
-            _logger.RLogDebug("DIContainer created.");
+            writeObject.WriteMessage = "DIContainer created.";
+            PSWriteMessage(this, writeObject);
 
             if (RevenantConfig.RunningConfig.ShowLogo)
             {
@@ -137,7 +131,29 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Common
 
         private IHostBuilder BuildAppHost()
         {
-            _config ??= new Configuration();
+            if (null == PSWriteMessage)
+            {
+                if (BuildFromCustomConfig)
+                {
+                    _config ??= new Configuration(CustomConfig);
+                }
+                else
+                {
+                    _config ??= new Configuration();
+                }
+            }
+            else
+            {
+                if (BuildFromCustomConfig)
+                {
+                    _config ??= new Configuration(CustomConfig, PSWriteMessage);
+                }
+                else
+                {
+                    _config ??= new Configuration(PSWriteMessage);
+                }
+            }
+
             _sharedLoggerFactory = SharedLoggerFactory = Utilities.NewLoggerFactory(_config);
 
             string basePath = _config.ConfigHome;

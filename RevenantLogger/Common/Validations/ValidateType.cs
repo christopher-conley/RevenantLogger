@@ -12,26 +12,63 @@
 
         protected override void Validate(object arguments, EngineIntrinsics engineIntrinsics)
         {
+            bool validArgument = false;
             if (arguments == null)
             {
                 throw new ValidationMetadataException("Value cannot be null");
             }
+            ;
+            ;
+            ;
+            ;
+            ;
+            //PSObject psObj = arguments as PSObject;
+            //if (psObj == null)
+            //{
+            //    throw new ValidationMetadataException("Value must be a PSObject");
+            //}
 
-            PSObject psObj = arguments as PSObject;
-            if (psObj == null)
+            //Get the base object's type
+            //Type baseType = psObj.BaseObject.GetType();
+
+            foreach (Type type in _allowedTypes)
             {
-                throw new ValidationMetadataException("Value must be a PSObject");
+                //if (type.IsAssignableFrom(arguments.GetType()))
+                //{
+                //    validArgument = true;
+                //    return;
+                //}
+
+                if (type.IsAssignableFrom(arguments.GetType()))
+                {
+                    validArgument = true;
+                    return;
+                }
+                else
+                {
+                    PSObject? psObj = arguments as PSObject;
+                    Type? argType = psObj?.BaseObject.GetType();
+                    if (argType != null && type.IsAssignableFrom(argType))
+                    {
+                        validArgument = true;
+                        return;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
             }
 
-            // Get the base object's type
-            Type baseType = psObj.BaseObject.GetType();
+            throw new ValidationMetadataException(
+                    $"Value must be one of the following types: {_allowedTypes.ToString()}.");
 
-            if (!_allowedTypes.Any(t => t.IsAssignableFrom(baseType)))
-            {
-                string allowedTypeNames = string.Join(", ", _allowedTypes.Select(t => t.Name));
-                throw new ValidationMetadataException(
-                    $"Value must be one of the following types: {allowedTypeNames}. Got: {baseType.Name}");
-            }
+            //if (!_allowedTypes.Any(t => t.IsAssignableFrom(baseType)))
+            //{
+            //    string allowedTypeNames = string.Join(", ", _allowedTypes.Select(t => t.Name));
+            //    throw new ValidationMetadataException(
+            //        $"Value must be one of the following types: {allowedTypeNames}. Got: {baseType.Name}");
+            //}
         }
     }
 }

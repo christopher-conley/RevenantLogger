@@ -294,5 +294,25 @@ namespace RosettaTools.Pwsh.Text.RevenantLogger.Helpers
                 Console.WriteLine(resource);
             }
         }
+
+        protected internal static ErrorRecord NewPSError(
+            string parameterName,
+            string errorMessage,
+            string errorID,
+            ErrorCategory errorCategory = ErrorCategory.NotSpecified,
+            object? targetObject = null
+            )
+        {
+            ArgumentNullException dotnetException = new ArgumentNullException(paramName: parameterName, message: errorMessage);
+            ErrorRecord psErrorRecord = new ErrorRecord(
+                exception: dotnetException,
+                errorId: errorID,
+                errorCategory: errorCategory,
+                targetObject: targetObject
+                );
+
+            return psErrorRecord;
+        }
+
     }
 }
